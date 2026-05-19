@@ -7,10 +7,10 @@ type AuthenticatedUser = NonNullable<TrpcContext["user"]>;
 function createAuthContext(userId: number = 1): TrpcContext {
   const user: AuthenticatedUser = {
     id: userId,
-    openId: `user-${userId}`,
+    authUserId: `user-${userId}`,
     email: `user${userId}@example.com`,
     name: `Test User ${userId}`,
-    loginMethod: "manus",
+    loginMethod: "neon-auth",
     role: "user",
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -19,13 +19,14 @@ function createAuthContext(userId: number = 1): TrpcContext {
 
   return {
     user,
-    req: {
-      protocol: "https",
-      headers: {},
-    } as TrpcContext["req"],
-    res: {
-      clearCookie: vi.fn(),
-    } as TrpcContext["res"],
+    req: new Request("https://localhost/"),
+  };
+}
+
+function createUnauthContext(): TrpcContext {
+  return {
+    user: null,
+    req: new Request("https://localhost/"),
   };
 }
 
@@ -85,12 +86,7 @@ describe("tRPC Parts Procedures", () => {
 
   describe("parts.getSearchHistory", () => {
     it("should require authentication", async () => {
-      const ctx = {
-        user: null,
-        req: { protocol: "https", headers: {} } as TrpcContext["req"],
-        res: { clearCookie: vi.fn() } as TrpcContext["res"],
-      } as unknown as TrpcContext;
-
+      const ctx = createUnauthContext();
       const caller = appRouter.createCaller(ctx);
 
       try {
@@ -112,12 +108,7 @@ describe("tRPC Parts Procedures", () => {
 
   describe("parts.addToHistory", () => {
     it("should require authentication", async () => {
-      const ctx = {
-        user: null,
-        req: { protocol: "https", headers: {} } as TrpcContext["req"],
-        res: { clearCookie: vi.fn() } as TrpcContext["res"],
-      } as unknown as TrpcContext;
-
+      const ctx = createUnauthContext();
       const caller = appRouter.createCaller(ctx);
 
       try {
