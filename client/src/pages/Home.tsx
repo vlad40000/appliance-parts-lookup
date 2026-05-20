@@ -9,6 +9,15 @@ import { trpc } from "@/lib/trpc";
 import ModelResults from "@/pages/ModelResults";
 import { validateImage, fileToBase64, canvasToBase64, getMimeType } from "@/lib/imageUtils";
 
+function getErrorMessage(error: unknown) {
+  if (error instanceof Error && error.message) return error.message;
+  if (typeof error === "object" && error !== null && "message" in error) {
+    const message = (error as { message?: unknown }).message;
+    if (typeof message === "string" && message) return message;
+  }
+  return "Failed to process image";
+}
+
 export default function Home() {
   const [modelNumber, setModelNumber] = useState("");
   const [selectedModel, setSelectedModel] = useState<string | null>(null);
@@ -72,7 +81,8 @@ export default function Home() {
       }
     } catch (error) {
       toast.dismiss();
-      toast.error("Failed to process image");
+      console.error("[OCR upload] Failed to process image:", error);
+      toast.error(getErrorMessage(error));
     }
   };
 
@@ -114,19 +124,25 @@ export default function Home() {
     const imageData = canvasToBase64(canvasRef.current);
 
     if (imageData) {
-      toast.loading("Extracting model number...");
-      const result = await extractImageMutation.mutateAsync({
-        imageBase64: imageData,
-        mimeType: "image/jpeg",
-      });
+      try {
+        toast.loading("Extracting model number...");
+        const result = await extractImageMutation.mutateAsync({
+          imageBase64: imageData,
+          mimeType: "image/jpeg",
+        });
 
-      toast.dismiss();
-      if (result.error) {
-        toast.error(result.error);
-      } else if (result.modelNumber) {
-        setModelNumber(result.modelNumber);
-        toast.success(`Model number extracted: ${result.modelNumber}`);
-        stopCamera();
+        toast.dismiss();
+        if (result.error) {
+          toast.error(result.error);
+        } else if (result.modelNumber) {
+          setModelNumber(result.modelNumber);
+          toast.success(`Model number extracted: ${result.modelNumber}`);
+          stopCamera();
+        }
+      } catch (error) {
+        toast.dismiss();
+        console.error("[OCR camera] Failed to process image:", error);
+        toast.error(getErrorMessage(error));
       }
     }
   };
@@ -285,7 +301,7 @@ export default function Home() {
                     Drag and drop an image here
                   </p>
                   <p className="mb-4 text-xs text-slate-600">
-                    or click to browse (JPEG, PNG, WebP, GIF up to 10MB)
+                    or click to browse (JPEG, PNG, WebP, GIF up to 3MB)
                   </p>
                   <input
                     ref={fileInputRef}

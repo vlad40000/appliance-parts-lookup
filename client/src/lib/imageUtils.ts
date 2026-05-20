@@ -4,7 +4,7 @@ export interface ImageValidationResult {
 }
 
 export const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-export const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+export const MAX_FILE_SIZE = 3 * 1024 * 1024; // 3MB; base64 expands before API upload.
 
 export function validateImage(file: File): ImageValidationResult {
   if (!file) {
