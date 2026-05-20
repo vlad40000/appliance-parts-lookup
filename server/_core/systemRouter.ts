@@ -1,6 +1,10 @@
 import { z } from "zod";
-import { notifyOwner } from "./notification";
 import { adminProcedure, publicProcedure, router } from "./trpc";
+
+const notifyOwner = async (input: { title: string; content: string }) => {
+  console.log("Mock notifyOwner:", input);
+  return true;
+};
 
 export const systemRouter = router({
   health: publicProcedure
