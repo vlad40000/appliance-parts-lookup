@@ -20,8 +20,11 @@ export async function storagePut(
   contentType = "application/octet-stream",
 ): Promise<{ key: string; url: string }> {
   const key = appendHashSuffix(normalizeKey(relKey));
+  const body = data instanceof Uint8Array && !Buffer.isBuffer(data)
+    ? Buffer.from(data)
+    : data;
 
-  const blob = await put(key, data, {
+  const blob = await put(key, body, {
     access: "public",
     contentType,
     token: process.env.BLOB_READ_WRITE_TOKEN,

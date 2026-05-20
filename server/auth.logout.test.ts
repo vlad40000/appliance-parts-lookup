@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { appRouter } from "./routers";
 import { COOKIE_NAME } from "../shared/const";
+import type { Request, Response } from "express";
 import type { TrpcContext } from "./_core/context";
 
 type CookieCall = {
@@ -25,7 +26,13 @@ function createAuthContext(): { ctx: TrpcContext } {
 
   const ctx: TrpcContext = {
     user,
-    req: new Request("https://localhost/"),
+    req: {
+      headers: {},
+      protocol: "https",
+    } as Request,
+    res: {
+      clearCookie: () => undefined,
+    } as unknown as Response,
   };
 
   return { ctx };

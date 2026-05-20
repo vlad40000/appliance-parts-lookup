@@ -1,10 +1,12 @@
 import { jwtVerify } from "jose";
-import type { FetchCreateContextFnOptions } from "@trpc/server/adapters/fetch";
+import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
+import type { Request, Response } from "express";
 import type { User } from "../../drizzle/schema";
 import { getUserByAuthId } from "../db";
 
 export type TrpcContext = {
   req: Request;
+  res: Response;
   user: User | null;
 };
 
@@ -13,12 +15,15 @@ export type TrpcContext = {
  * app-level User record. Returns null for unauthenticated requests (public procedures).
  */
 export async function createContext(
-  opts: FetchCreateContextFnOptions
+  opts: CreateExpressContextOptions
 ): Promise<TrpcContext> {
   let user: User | null = null;
 
   try {
-    const authHeader = opts.req.headers.get("authorization") ?? "";
+    const rawAuthHeader = opts.req.headers.authorization;
+    const authHeader = Array.isArray(rawAuthHeader)
+      ? rawAuthHeader[0]
+      : rawAuthHeader ?? "";
     const token = authHeader.replace(/^Bearer\s+/i, "");
 
     if (token) {
@@ -34,5 +39,5 @@ export async function createContext(
     user = null;
   }
 
-  return { req: opts.req, user };
+  return { req: opts.req, res: opts.res, user };
 }

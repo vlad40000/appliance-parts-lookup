@@ -32,8 +32,8 @@ let _dbSecondary: ReturnType<typeof drizzle> | null = null;
 
 export function getDbSecondary() {
   if (!_dbSecondary) {
-    const url = process.env.DATABASE_URL_SECONDARY;
-    if (!url) throw new Error("DATABASE_URL_SECONDARY is not set");
+    const url = process.env.DATABASE_SECONDARY_URL;
+    if (!url) throw new Error("DATABASE_SECONDARY_URL is not set");
     const sql = neon(url);
     _dbSecondary = drizzle(sql);
   }
