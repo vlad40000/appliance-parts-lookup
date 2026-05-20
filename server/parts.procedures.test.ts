@@ -1,6 +1,21 @@
-import { describe, it, expect, vi } from "vitest";
+import { beforeEach, describe, it, expect, vi } from "vitest";
 import { appRouter } from "./routers";
 import type { TrpcContext } from "./_core/context";
+
+const dbMocks = vi.hoisted(() => ({
+  addSearchHistory: vi.fn(),
+  getSearchHistory: vi.fn(),
+}));
+
+vi.mock("./db", async importOriginal => {
+  const actual = await importOriginal<typeof import("./db")>();
+
+  return {
+    ...actual,
+    addSearchHistory: dbMocks.addSearchHistory,
+    getSearchHistory: dbMocks.getSearchHistory,
+  };
+});
 
 type AuthenticatedUser = NonNullable<TrpcContext["user"]>;
 
@@ -31,6 +46,17 @@ function createUnauthContext(): TrpcContext {
 }
 
 describe("tRPC Parts Procedures", () => {
+  beforeEach(() => {
+    dbMocks.getSearchHistory.mockResolvedValue([]);
+    dbMocks.addSearchHistory.mockImplementation(
+      async (_userId: number, _modelNumber: string, modelId?: number) => {
+        if (modelId === 999999) {
+          throw new Error("Foreign key violation");
+        }
+      }
+    );
+  });
+
   describe("parts.lookup", () => {
     it("should reject invalid model numbers", async () => {
       const ctx = createAuthContext();
